@@ -10,7 +10,8 @@ public class PlayerControl : MonoBehaviour
 
     [Header("Basic Movement")]
     //Accessable Basic Movement
-    public float BaseMoveSpeed;
+    public float MaxBaseMoveSpeed;
+    public float BaseSpeedMod;
     public float MaxSprintMoveSpeed;
     public float SpeedModIncriment;
     //Private Basic Movement
@@ -27,9 +28,19 @@ public class PlayerControl : MonoBehaviour
     private Vector3 lookDirection;
     private float xRot;
 
+    [Header("Jumping")]
+    //Accessable Jump Variables
+    public float JumpStrength;
+    public LayerMask GroundMask;
+    //Private Jump Variables
+    private bool hasJumped = false;
+    private bool IsGrounded = false;
+    [SerializeField]
+    private Transform GroundCheck;
+    [SerializeField]
+    private float raycastDist;
 
-    /*[Header("Jumping")]
-    [Header("Crouch and Slide")]
+    /*[Header("Crouch and Slide")]
     [Header("Extra")]*/
 
     [Header("Unity Attributes")]
@@ -72,24 +83,29 @@ public class PlayerControl : MonoBehaviour
     {
         //Basic Movement
         MovementUpdate();
+        movePlayer(moveDirection);
         //Look
         CameraUpdate();
         //Sprint Check
         SprintCheck();
-
         //Jump Check
-        //inputActions.Player.Jump.triggered //Bool when you trigger the button
+        hasJumped = jumpAction.triggered;
+        GroundedCheck();
+        Jump();
         //Crouch Check
 
         //Slide Check
 
 
         //More Checks
+        Debug.Log(rb.linearVelocity.magnitude);
+        Debug.Log(rb.maxLinearVelocity);
     }
     private void FixedUpdate()
     {
         //Basic Movement
-        movePlayer(moveDirection);
+        
+        //Jump
     }
     private void MovementUpdate()
     {
@@ -98,9 +114,31 @@ public class PlayerControl : MonoBehaviour
     }
     private void movePlayer(Vector3 dir)
     {
-        float MoveSpeed = BaseMoveSpeed + SpeedMod;
-        rb.linearVelocity = dir * MoveSpeed * Time.fixedDeltaTime;
-        Debug.Log(MoveSpeed);
+        if(isSprinting)
+        {
+            rb.maxLinearVelocity = MaxBaseMoveSpeed + MaxSprintMoveSpeed;
+        }
+        else
+        {
+            rb.maxLinearVelocity = MaxBaseMoveSpeed;
+        }
+
+        float TotalMoveSpeedMod = BaseSpeedMod + SpeedMod;
+        dir *= TotalMoveSpeedMod * Time.fixedDeltaTime;
+
+        var movementPlane = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.y);
+        if (movementPlane.magnitude < rb.maxLinearVelocity)
+        {
+            rb.AddForce(dir, ForceMode.Force);
+        }
+    }
+    private void CameraUpdate()
+    {
+        Vector2 look = lookAction.ReadValue<Vector2>();
+        xRot -= look.y * sensitivity * Time.deltaTime;
+        xRot = Mathf.Clamp(xRot, MinLookAngle, MaxLookAngle);
+        gameObject.transform.Rotate(0, look.x * sensitivity * Time.deltaTime, 0);
+        playerCamera.transform.localRotation = Quaternion.Euler(xRot, 0f, 0f);
     }
     private void SprintCheck()
     {
@@ -121,12 +159,19 @@ public class PlayerControl : MonoBehaviour
             SpeedMod = 0;
         }
     }
-    private void CameraUpdate()
+    private void GroundedCheck()
     {
-        Vector2 look = lookAction.ReadValue<Vector2>();
-        xRot -= look.y * sensitivity * Time.deltaTime;
-        xRot = Mathf.Clamp(xRot, MinLookAngle, MaxLookAngle);
-        gameObject.transform.Rotate(0, look.x * sensitivity * Time.deltaTime, 0);
-        playerCamera.transform.localRotation = Quaternion.Euler(xRot, 0f, 0f);
+        RaycastHit hit;
+        if(Physics.Raycast(GroundCheck.position, Vector3.down, out hit, raycastDist, GroundMask))
+            IsGrounded = true;
+        else
+            IsGrounded = false;
+    }
+    private void Jump()
+    {
+        if (IsGrounded && hasJumped)
+        {
+            rb.AddForce(Vector3.up * JumpStrength, ForceMode.Impulse);
+        }
     }
 }
