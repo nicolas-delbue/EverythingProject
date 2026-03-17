@@ -658,7 +658,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerControl
   BaseMoveSpeed: 100
-  MaxSprintMoveSpeed: 0
+  MaxSprintMoveSpeed: 150
+  SpeedModIncriment: 5
   sensitivity: 90
   MaxLookAngle: 70
   MinLookAngle: -70

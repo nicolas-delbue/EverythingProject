@@ -12,8 +12,10 @@ public class PlayerControl : MonoBehaviour
     //Accessable Basic Movement
     public float BaseMoveSpeed;
     public float MaxSprintMoveSpeed;
+    public float SpeedModIncriment;
     //Private Basic Movement
     private Vector3 moveDirection;
+    private float SpeedMod = 0;
     bool isSprinting = false;
 
     [Header("Camera")]
@@ -73,8 +75,7 @@ public class PlayerControl : MonoBehaviour
         //Look
         CameraUpdate();
         //Sprint Check
-        isSprinting = sprintAction.triggered;
-        Debug.Log(isSprinting);
+        SprintCheck();
 
         //Jump Check
         //inputActions.Player.Jump.triggered //Bool when you trigger the button
@@ -97,11 +98,28 @@ public class PlayerControl : MonoBehaviour
     }
     private void movePlayer(Vector3 dir)
     {
-        if(!isSprinting)
+        float MoveSpeed = BaseMoveSpeed + SpeedMod;
+        rb.linearVelocity = dir * MoveSpeed * Time.fixedDeltaTime;
+        Debug.Log(MoveSpeed);
+    }
+    private void SprintCheck()
+    {
+        isSprinting = sprintAction.inProgress;
+        if (isSprinting)
         {
-            rb.linearVelocity = dir * BaseMoveSpeed * Time.fixedDeltaTime;
+            if (SpeedMod >= MaxSprintMoveSpeed)
+            {
+                SpeedMod = MaxSprintMoveSpeed;
+            }
+            else
+            {
+                SpeedMod += SpeedModIncriment;
+            }
         }
-        
+        else
+        {
+            SpeedMod = 0;
+        }
     }
     private void CameraUpdate()
     {
