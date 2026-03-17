@@ -89,7 +89,6 @@ public class PlayerControl : MonoBehaviour
         //Sprint Check
         SprintCheck();
         //Jump Check
-        hasJumped = jumpAction.triggered;
         GroundedCheck();
         Jump();
         //Crouch Check
@@ -103,9 +102,7 @@ public class PlayerControl : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        //Basic Movement
         
-        //Jump
     }
     private void MovementUpdate()
     {
@@ -117,6 +114,10 @@ public class PlayerControl : MonoBehaviour
         if(isSprinting)
         {
             rb.maxLinearVelocity = MaxBaseMoveSpeed + MaxSprintMoveSpeed;
+        }
+        else if(!isSprinting && isSprinting)
+        {
+            //Add Crouch and sliding here?
         }
         else
         {
@@ -169,6 +170,7 @@ public class PlayerControl : MonoBehaviour
     }
     private void Jump()
     {
+        hasJumped = jumpAction.triggered;
         if (IsGrounded && hasJumped)
         {
             rb.AddForce(Vector3.up * JumpStrength, ForceMode.Impulse);
