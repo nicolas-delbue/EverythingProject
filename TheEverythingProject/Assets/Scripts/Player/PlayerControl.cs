@@ -32,16 +32,32 @@ public class PlayerControl : MonoBehaviour
     //Accessable Jump Variables
     public float JumpStrength;
     public LayerMask GroundMask;
-    //Private Jump Variables
-    private bool hasJumped = false;
-    private bool IsGrounded = false;
+    //Serialized Jump Variables
     [SerializeField]
     private Transform GroundCheck;
     [SerializeField]
     private float raycastDist;
+    //Private Jump Variables
+    private bool hasJumped = false;
+    private bool IsGrounded = false;
 
-    /*[Header("Crouch and Slide")]
-    [Header("Extra")]*/
+
+    [Header("Crouch and Slide")]
+    //Accessable Crouch Varaibles
+    public float MaxCrouchMoveSpeed;
+    public float BaseCrouchMod;
+    public float CrouchCheckRadius;
+    //Serialized Crouch Variables
+    [SerializeField]
+    private Collider StandCollider;
+    [SerializeField]
+    private Collider CrouchCollider;
+    [SerializeField]
+    private Transform HeadCheck;
+    //Private Crouch Variables
+    private bool IsCrouching = false;
+
+    //[Header("Extra")]
 
     [Header("Unity Attributes")]
     //Accessable Attributes
@@ -50,6 +66,10 @@ public class PlayerControl : MonoBehaviour
     private Rigidbody rb;
     [SerializeField]
     private GameObject playerCamera;
+    [SerializeField]
+    private Vector3 standingCameraPosition;
+    [SerializeField]
+    private Vector3 crouchingCameraPosition;
     //Private Attributes
     private PlayerInput inputActions;
     private InputAction moveAction;
@@ -92,13 +112,14 @@ public class PlayerControl : MonoBehaviour
         GroundedCheck();
         Jump();
         //Crouch Check
+        CrouchCheck();
+
 
         //Slide Check
 
 
         //More Checks
         Debug.Log(rb.linearVelocity.magnitude);
-        Debug.Log(rb.maxLinearVelocity);
     }
     private void FixedUpdate()
     {
@@ -115,16 +136,21 @@ public class PlayerControl : MonoBehaviour
         {
             rb.maxLinearVelocity = MaxBaseMoveSpeed + MaxSprintMoveSpeed;
         }
-        else if(!isSprinting && isSprinting)
+        else if (isSprinting && IsCrouching)
         {
-            //Add Crouch and sliding here?
+            //Slide?
+        }
+        else if(!isSprinting && IsCrouching)
+        {
+            //Crouch
+            rb.maxLinearVelocity = MaxCrouchMoveSpeed;
         }
         else
         {
             rb.maxLinearVelocity = MaxBaseMoveSpeed;
         }
 
-        float TotalMoveSpeedMod = BaseSpeedMod + SpeedMod;
+        float TotalMoveSpeedMod = BaseSpeedMod + SpeedMod - BaseCrouchMod;
         dir *= TotalMoveSpeedMod * Time.fixedDeltaTime;
 
         var movementPlane = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.y);
@@ -174,6 +200,28 @@ public class PlayerControl : MonoBehaviour
         if (IsGrounded && hasJumped)
         {
             rb.AddForce(Vector3.up * JumpStrength, ForceMode.Impulse);
+        }
+    }
+    private void CrouchCheck()
+    {
+        IsCrouching = crouchAction.inProgress;
+
+        if (Physics.CheckSphere(HeadCheck.position, CrouchCheckRadius, GroundMask) && !IsCrouching)
+            IsCrouching = true;
+
+        if (IsCrouching)
+        {
+            StandCollider.enabled = false;
+            CrouchCollider.enabled = true;
+            //Move Camera
+            playerCamera.transform.localPosition = crouchingCameraPosition;
+        }
+        else
+        {
+            StandCollider.enabled = true;
+            CrouchCollider.enabled = false;
+            //Move Camera
+            playerCamera.transform.localPosition = standingCameraPosition;
         }
     }
 }
