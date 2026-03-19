@@ -9,14 +9,18 @@ public class PlayerControl : MonoBehaviour
     //Private 
 
     [Header("Basic Movement")]
-    //Accessable Basic Movement
-    public float MaxBaseMoveSpeed;
-    public float BaseSpeedMod;
-    public float MaxSprintMoveSpeed;
-    public float SpeedModIncriment;
-    //Private Basic Movement
+    //Accessable Basic Movement Variables
+    public float WalkMoveSpeed;
+    public float SprintMoveSpeed;
+    public float MovementMultiplier;
+    public float PlayerDrag;
+    //Serialized Basic Movement Variables
+    [SerializeField]
+    private float SpeedIncriment;
+    //Private Basic Movement Variables
     private Vector3 moveDirection;
-    private float SpeedMod = 0;
+    private float moveSpeed;
+    private float SprintMod;
     bool isSprinting = false;
 
     [Header("Camera")]
@@ -44,8 +48,7 @@ public class PlayerControl : MonoBehaviour
 
     [Header("Crouch and Slide")]
     //Accessable Crouch Varaibles
-    public float MaxCrouchMoveSpeed;
-    public float BaseCrouchMod;
+    public float CrouchMoveSpeed;
     public float CrouchCheckRadius;
     //Serialized Crouch Variables
     [SerializeField]
@@ -103,7 +106,7 @@ public class PlayerControl : MonoBehaviour
     {
         //Basic Movement
         MovementUpdate();
-        movePlayer(moveDirection);
+        ControlDrag();
         //Look
         CameraUpdate();
         //Sprint Check
@@ -113,51 +116,47 @@ public class PlayerControl : MonoBehaviour
         Jump();
         //Crouch Check
         CrouchCheck();
-
-
         //Slide Check
 
 
         //More Checks
-        //Debug.Log(rb.linearVelocity.magnitude);
+        Debug.Log(rb.linearVelocity.magnitude);
     }
     private void FixedUpdate()
     {
-        
+        movePlayer();
     }
     private void MovementUpdate()
     {
         Vector2 move = moveAction.ReadValue<Vector2>();
         moveDirection = transform.forward * move.y + transform.right * move.x;
     }
-    private void movePlayer(Vector3 dir)
+    private void movePlayer()
     {
-        if(isSprinting)
+        if (isSprinting)
         {
-            rb.maxLinearVelocity = MaxBaseMoveSpeed + MaxSprintMoveSpeed;
+            moveSpeed = SprintMod;
         }
-        else if (isSprinting && IsCrouching)
+        else if (!isSprinting && IsCrouching)
         {
-            //Slide?
-        }
-        else if(!isSprinting && IsCrouching)
-        {
-            //Crouch
-            rb.maxLinearVelocity = MaxCrouchMoveSpeed;
+            moveSpeed = CrouchMoveSpeed;
         }
         else
         {
-            rb.maxLinearVelocity = MaxBaseMoveSpeed;
+            moveSpeed = WalkMoveSpeed;
         }
+        //else if (isSprinting && IsCrouching)
+        //{
+        //    //Slide?
+        //}
 
-        float TotalMoveSpeedMod = BaseSpeedMod + SpeedMod - BaseCrouchMod;
-        dir *= TotalMoveSpeedMod * Time.fixedDeltaTime;
 
-        var movementPlane = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.y);
-        if (movementPlane.magnitude < rb.maxLinearVelocity)
-        {
-            rb.AddForce(dir, ForceMode.Force);
-        }
+        //Movespeed and move multiplier
+        rb.AddForce(moveDirection.normalized * moveSpeed * MovementMultiplier, ForceMode.Acceleration);
+    }
+    private void ControlDrag()
+    {
+        rb.linearDamping = 6f;
     }
     private void CameraUpdate()
     {
@@ -172,18 +171,18 @@ public class PlayerControl : MonoBehaviour
         isSprinting = sprintAction.inProgress;
         if (isSprinting)
         {
-            if (SpeedMod >= MaxSprintMoveSpeed)
+            if (SprintMod >= SprintMoveSpeed)
             {
-                SpeedMod = MaxSprintMoveSpeed;
+                SprintMod = SprintMoveSpeed;
             }
             else
             {
-                SpeedMod += SpeedModIncriment;
+                SprintMod += SpeedIncriment;
             }
         }
         else
         {
-            SpeedMod = 0;
+            SprintMod = WalkMoveSpeed;
         }
     }
     private void GroundedCheck()
