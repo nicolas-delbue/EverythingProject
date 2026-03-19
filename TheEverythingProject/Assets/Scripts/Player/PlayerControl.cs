@@ -12,11 +12,14 @@ public class PlayerControl : MonoBehaviour
     //Accessable Basic Movement Variables
     public float WalkMoveSpeed;
     public float SprintMoveSpeed;
-    public float MovementMultiplier;
-    public float PlayerDrag;
+    
     //Serialized Basic Movement Variables
     [SerializeField]
     private float SpeedIncriment;
+    [SerializeField]
+    private float GroundMovementMultiplier;
+    [SerializeField]
+    private float AirMovementMultiplier;
     //Private Basic Movement Variables
     private Vector3 moveDirection;
     private float moveSpeed;
@@ -31,6 +34,7 @@ public class PlayerControl : MonoBehaviour
     //Private Camera Variables
     private Vector3 lookDirection;
     private float xRot;
+    private float yRot;
 
     [Header("Jumping")]
     //Accessable Jump Variables
@@ -38,9 +42,7 @@ public class PlayerControl : MonoBehaviour
     public LayerMask GroundMask;
     //Serialized Jump Variables
     [SerializeField]
-    private Transform GroundCheck;
-    [SerializeField]
-    private float raycastDist;
+    private float playerHeight;
     //Private Jump Variables
     private bool hasJumped = false;
     private bool IsGrounded = false;
@@ -55,8 +57,6 @@ public class PlayerControl : MonoBehaviour
     private Collider StandCollider;
     [SerializeField]
     private Collider CrouchCollider;
-    [SerializeField]
-    private Transform HeadCheck;
     //Private Crouch Variables
     private bool IsCrouching = false;
 
@@ -64,11 +64,15 @@ public class PlayerControl : MonoBehaviour
 
     [Header("Unity Attributes")]
     //Accessable Attributes
+    public float GroundDrag;
+    public float AirDrag;
     //Serialized Attributes
     [SerializeField]
     private Rigidbody rb;
     [SerializeField]
     private GameObject playerCamera;
+    [SerializeField]
+    private Transform orientation;
     [SerializeField]
     private Vector3 standingCameraPosition;
     [SerializeField]
@@ -120,18 +124,18 @@ public class PlayerControl : MonoBehaviour
 
 
         //More Checks
-        Debug.Log(rb.linearVelocity.magnitude);
+        //Debug.Log(rb.linearVelocity.magnitude);
     }
     private void FixedUpdate()
     {
-        movePlayer();
+        MovePlayer();
     }
     private void MovementUpdate()
     {
         Vector2 move = moveAction.ReadValue<Vector2>();
-        moveDirection = transform.forward * move.y + transform.right * move.x;
+        moveDirection = orientation.forward * move.y + orientation.right * move.x;
     }
-    private void movePlayer()
+    private void MovePlayer()
     {
         if (isSprinting)
         {
@@ -152,19 +156,43 @@ public class PlayerControl : MonoBehaviour
 
 
         //Movespeed and move multiplier
-        rb.AddForce(moveDirection.normalized * moveSpeed * MovementMultiplier, ForceMode.Acceleration);
+        if (IsGrounded)
+        {
+            rb.AddForce(moveDirection.normalized * moveSpeed * GroundMovementMultiplier, ForceMode.Acceleration);
+        }
+        else
+        {
+            rb.AddForce(moveDirection.normalized * moveSpeed * AirMovementMultiplier, ForceMode.Acceleration);
+        }
+        
     }
     private void ControlDrag()
     {
-        rb.linearDamping = 6f;
+        if(!IsGrounded)
+        {
+            rb.linearDamping = AirDrag;
+        }
+        else
+        {
+            rb.linearDamping = GroundDrag;
+        }
     }
     private void CameraUpdate()
     {
         Vector2 look = lookAction.ReadValue<Vector2>();
+
+        yRot += look.x * sensitivity * Time.deltaTime;
         xRot -= look.y * sensitivity * Time.deltaTime;
+
         xRot = Mathf.Clamp(xRot, MinLookAngle, MaxLookAngle);
-        gameObject.transform.Rotate(0, look.x * sensitivity * Time.deltaTime, 0);
-        playerCamera.transform.localRotation = Quaternion.Euler(xRot, 0f, 0f);
+
+        playerCamera.transform.rotation = Quaternion.Euler(xRot, yRot, 0);
+        orientation.transform.rotation = Quaternion.Euler(0f, yRot, 0f);
+
+        //rotate the model
+
+        //gameObject.transform.Rotate(0f, look.x * sensitivity * Time.deltaTime, 0f);
+        //playerCamera.transform.localRotation = Quaternion.Euler(xRot, 0f, 0f);
     }
     private void SprintCheck()
     {
@@ -188,7 +216,7 @@ public class PlayerControl : MonoBehaviour
     private void GroundedCheck()
     {
         RaycastHit hit;
-        if(Physics.Raycast(GroundCheck.position, Vector3.down, out hit, raycastDist, GroundMask))
+        if(Physics.Raycast(transform.position, Vector3.down, out hit, playerHeight / 2 + 0.1f, GroundMask))
             IsGrounded = true;
         else
             IsGrounded = false;
@@ -205,7 +233,7 @@ public class PlayerControl : MonoBehaviour
     {
         IsCrouching = crouchAction.inProgress;
 
-        if (Physics.CheckSphere(HeadCheck.position, CrouchCheckRadius, GroundMask) && !IsCrouching)
+        if (Physics.CheckSphere(transform.position, CrouchCheckRadius, GroundMask) && !IsCrouching)
             IsCrouching = true;
 
         if (IsCrouching)
@@ -213,14 +241,19 @@ public class PlayerControl : MonoBehaviour
             StandCollider.enabled = false;
             CrouchCollider.enabled = true;
             //Move Camera
-            playerCamera.transform.localPosition = crouchingCameraPosition;
+            //playerCamera.transform.localPosition = crouchingCameraPosition;
         }
         else
         {
             StandCollider.enabled = true;
             CrouchCollider.enabled = false;
             //Move Camera
-            playerCamera.transform.localPosition = standingCameraPosition;
+            //playerCamera.transform.localPosition = standingCameraPosition;
         }
+    }
+
+    public bool GetCrouched()
+    {
+        return IsCrouching;
     }
 }
