@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public abstract class Interactable
+public abstract class Interactable : MonoBehaviour
 {
     private bool _isInitialized; //Will have a use when level item manager exists
 

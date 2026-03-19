@@ -9,7 +9,9 @@ public class PlayerInteraction : MonoBehaviour
 
     [SerializeField]
     Transform PlayerCamera;
+    [SerializeField]
     float interactionRange;
+    [SerializeField]
     LayerMask InteractMask;
 
     Interactable interactable;

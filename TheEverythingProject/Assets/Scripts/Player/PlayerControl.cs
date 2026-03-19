@@ -119,7 +119,7 @@ public class PlayerControl : MonoBehaviour
 
 
         //More Checks
-        Debug.Log(rb.linearVelocity.magnitude);
+        //Debug.Log(rb.linearVelocity.magnitude);
     }
     private void FixedUpdate()
     {
