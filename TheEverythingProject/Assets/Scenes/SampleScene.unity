@@ -4460,6 +4460,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   playerHeight: 2
+  jumpCheckRad: 0.4
   CrouchMoveSpeed: 1.4
   CrouchCheckRadius: 0.2
   StandCollider: {fileID: 1327097181}

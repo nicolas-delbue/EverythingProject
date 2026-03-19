@@ -43,6 +43,8 @@ public class PlayerControl : MonoBehaviour
     //Serialized Jump Variables
     [SerializeField]
     private float playerHeight;
+    [SerializeField]
+    private float jumpCheckRad;
     //Private Jump Variables
     private bool hasJumped = false;
     private bool IsGrounded = false;
@@ -215,8 +217,7 @@ public class PlayerControl : MonoBehaviour
     }
     private void GroundedCheck()
     {
-        RaycastHit hit;
-        if(Physics.Raycast(transform.position, Vector3.down, out hit, playerHeight / 2 + 0.1f, GroundMask))
+        if (Physics.CheckSphere(transform.position - new Vector3(0, playerHeight / 2, 0), jumpCheckRad, GroundMask))
             IsGrounded = true;
         else
             IsGrounded = false;
