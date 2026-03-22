@@ -24,7 +24,26 @@ public class PlayerControl : MonoBehaviour
     private Vector3 moveDirection;
     private float moveSpeed;
     private float SprintMod;
-    bool isSprinting = false;
+    private bool isSprinting = false;
+
+    //Slope
+    RaycastHit SlopeHit;
+    Vector3 SlopeMoveDir;
+    private bool OnSlope()
+    {
+        if(Physics.Raycast(transform.position, Vector3.down, out SlopeHit, playerHeight/2 + 0.5f))
+        {
+            if(SlopeHit.normal != Vector3.up)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return false;
+    }
 
     [Header("Camera")]
     //Accessable Camera Variables
@@ -39,6 +58,7 @@ public class PlayerControl : MonoBehaviour
     [Header("Jumping")]
     //Accessable Jump Variables
     public float JumpStrength;
+    public Transform GroundCheckPos;
     public LayerMask GroundMask;
     //Serialized Jump Variables
     [SerializeField]
@@ -136,6 +156,7 @@ public class PlayerControl : MonoBehaviour
     {
         Vector2 move = moveAction.ReadValue<Vector2>();
         moveDirection = orientation.forward * move.y + orientation.right * move.x;
+        SlopeMoveDir = Vector3.ProjectOnPlane(moveDirection, SlopeHit.normal);
     }
     private void MovePlayer()
     {
@@ -158,11 +179,15 @@ public class PlayerControl : MonoBehaviour
 
 
         //Movespeed and move multiplier
-        if (IsGrounded)
+        if (IsGrounded && !OnSlope())
         {
             rb.AddForce(moveDirection.normalized * moveSpeed * GroundMovementMultiplier, ForceMode.Acceleration);
         }
-        else
+        else if(IsGrounded && OnSlope())
+        {
+            rb.AddForce(SlopeMoveDir.normalized * moveSpeed * GroundMovementMultiplier, ForceMode.Acceleration);
+        }
+        else if (!IsGrounded)
         {
             rb.AddForce(moveDirection.normalized * moveSpeed * AirMovementMultiplier, ForceMode.Acceleration);
         }
@@ -217,7 +242,7 @@ public class PlayerControl : MonoBehaviour
     }
     private void GroundedCheck()
     {
-        if (Physics.CheckSphere(transform.position - new Vector3(0, playerHeight / 2, 0), jumpCheckRad, GroundMask))
+        if (Physics.CheckSphere(GroundCheckPos.position, jumpCheckRad, GroundMask))
             IsGrounded = true;
         else
             IsGrounded = false;
@@ -227,6 +252,7 @@ public class PlayerControl : MonoBehaviour
         hasJumped = jumpAction.triggered;
         if (IsGrounded && hasJumped)
         {
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x,0,rb.linearVelocity.z);
             rb.AddForce(Vector3.up * JumpStrength, ForceMode.Impulse);
         }
     }
