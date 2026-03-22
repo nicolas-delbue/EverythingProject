@@ -29,21 +29,6 @@ public class PlayerControl : MonoBehaviour
     //Slope
     RaycastHit SlopeHit;
     Vector3 SlopeMoveDir;
-    private bool OnSlope()
-    {
-        if(Physics.Raycast(transform.position, Vector3.down, out SlopeHit, playerHeight/2 + 0.5f))
-        {
-            if(SlopeHit.normal != Vector3.up)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        return false;
-    }
 
     [Header("Camera")]
     //Accessable Camera Variables
@@ -143,7 +128,7 @@ public class PlayerControl : MonoBehaviour
         //Crouch Check
         CrouchCheck();
         //Slide Check
-
+        
 
         //More Checks
         //Debug.Log(rb.linearVelocity.magnitude);
@@ -160,23 +145,10 @@ public class PlayerControl : MonoBehaviour
     }
     private void MovePlayer()
     {
-        if (isSprinting)
-        {
-            moveSpeed = SprintMod;
-        }
-        else if (!isSprinting && IsCrouching)
-        {
-            moveSpeed = CrouchMoveSpeed;
-        }
-        else
-        {
-            moveSpeed = WalkMoveSpeed;
-        }
         //else if (isSprinting && IsCrouching)
         //{
         //    //Slide?
         //}
-
 
         //Movespeed and move multiplier
         if (IsGrounded && !OnSlope())
@@ -224,20 +196,13 @@ public class PlayerControl : MonoBehaviour
     private void SprintCheck()
     {
         isSprinting = sprintAction.inProgress;
-        if (isSprinting)
+        if (isSprinting && IsGrounded)
         {
-            if (SprintMod >= SprintMoveSpeed)
-            {
-                SprintMod = SprintMoveSpeed;
-            }
-            else
-            {
-                SprintMod += SpeedIncriment;
-            }
+            moveSpeed = Mathf.Lerp(moveSpeed, SprintMoveSpeed, SpeedIncriment * Time.deltaTime);
         }
         else
         {
-            SprintMod = WalkMoveSpeed;
+            moveSpeed = Mathf.Lerp(moveSpeed, WalkMoveSpeed, SpeedIncriment * Time.deltaTime);
         }
     }
     private void GroundedCheck()
@@ -267,6 +232,7 @@ public class PlayerControl : MonoBehaviour
         {
             StandCollider.enabled = false;
             CrouchCollider.enabled = true;
+            moveSpeed = CrouchMoveSpeed;
             //Move Camera
             //playerCamera.transform.localPosition = crouchingCameraPosition;
         }
@@ -274,11 +240,26 @@ public class PlayerControl : MonoBehaviour
         {
             StandCollider.enabled = true;
             CrouchCollider.enabled = false;
+            moveSpeed = WalkMoveSpeed;
             //Move Camera
             //playerCamera.transform.localPosition = standingCameraPosition;
         }
     }
-
+    private bool OnSlope()
+    {
+        if (Physics.Raycast(transform.position, Vector3.down, out SlopeHit, playerHeight / 2 + 0.5f))
+        {
+            if (SlopeHit.normal != Vector3.up)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return false;
+    }
     public bool GetCrouched()
     {
         return IsCrouching;
