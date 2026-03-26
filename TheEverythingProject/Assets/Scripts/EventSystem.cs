@@ -13,6 +13,14 @@ public class EventSystem : MonoBehaviour
         current = this;
     }
 
+    public event Action<float> onRefillWater;
+    public void RefillWater(float RefillAmount)
+    {
+        if(onRefillWater != null)
+        {
+            onRefillWater(RefillAmount);
+        }
+    }
     public event Action<bool, string, string, float> onInteractionDetected;
     public void InteractionDetected(bool detect, string name, string type, float time)
     {

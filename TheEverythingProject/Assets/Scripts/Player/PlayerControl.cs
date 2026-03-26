@@ -53,6 +53,7 @@ public class PlayerControl : MonoBehaviour
     //Private Jump Variables
     private bool hasJumped = false;
     private bool IsGrounded = false;
+    public bool _IsGrounded => IsGrounded;
 
 
     [Header("Crouch and Slide")]
@@ -76,6 +77,10 @@ public class PlayerControl : MonoBehaviour
     //Serialized Attributes
     [SerializeField]
     private Rigidbody rb;
+    [SerializeField]
+    private Hydration hydration;
+    [SerializeField]
+    private Wallrun wr;
     [SerializeField]
     private GameObject playerCamera;
     [SerializeField]
@@ -128,10 +133,10 @@ public class PlayerControl : MonoBehaviour
         //Crouch Check
         CrouchCheck();
         //Slide Check
-        
+
 
         //More Checks
-        //Debug.Log(rb.linearVelocity.magnitude);
+        //Debug.Log(moveSpeed);
     }
     private void FixedUpdate()
     {
@@ -159,11 +164,14 @@ public class PlayerControl : MonoBehaviour
         {
             rb.AddForce(SlopeMoveDir.normalized * moveSpeed * GroundMovementMultiplier, ForceMode.Acceleration);
         }
-        else if (!IsGrounded)
+        else if (!IsGrounded && wr.IsWallRunning)
+        {
+            rb.AddForce(wr.WallDir.normalized * moveSpeed * AirMovementMultiplier, ForceMode.Acceleration);
+        }
+        else
         {
             rb.AddForce(moveDirection.normalized * moveSpeed * AirMovementMultiplier, ForceMode.Acceleration);
         }
-        
     }
     private void ControlDrag()
     {
@@ -196,9 +204,13 @@ public class PlayerControl : MonoBehaviour
     private void SprintCheck()
     {
         isSprinting = sprintAction.inProgress;
-        if (isSprinting && IsGrounded)
+        if (isSprinting && IsGrounded && !hydration.IsDehydrated) //add !dehydrateed
         {
             moveSpeed = Mathf.Lerp(moveSpeed, SprintMoveSpeed, SpeedIncriment * Time.deltaTime);
+            if(moveSpeed > 6.7f)
+            {
+                moveSpeed = SprintMoveSpeed;
+            }
         }
         else
         {
@@ -215,9 +227,14 @@ public class PlayerControl : MonoBehaviour
     private void Jump()
     {
         hasJumped = jumpAction.triggered;
-        if (IsGrounded && hasJumped)
+        if (IsGrounded && hasJumped && hydration.IsDehydrated)
         {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x,0,rb.linearVelocity.z);
+            rb.AddForce(Vector3.up * JumpStrength/2, ForceMode.Impulse);
+        }
+        else if(IsGrounded && hasJumped && !hydration.IsDehydrated)
+        {
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
             rb.AddForce(Vector3.up * JumpStrength, ForceMode.Impulse);
         }
     }
@@ -240,7 +257,10 @@ public class PlayerControl : MonoBehaviour
         {
             StandCollider.enabled = true;
             CrouchCollider.enabled = false;
-            moveSpeed = WalkMoveSpeed;
+            if(!isSprinting)
+            {
+                moveSpeed = WalkMoveSpeed;
+            }
             //Move Camera
             //playerCamera.transform.localPosition = standingCameraPosition;
         }

@@ -38,6 +38,7 @@ public abstract class Interactable : MonoBehaviour
 
     public virtual void Update()
     {
+
     }
 
     protected abstract void HandleInteraction(PlayerInteraction interactor);

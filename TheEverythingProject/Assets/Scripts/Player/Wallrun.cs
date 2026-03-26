@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 public class Wallrun : MonoBehaviour
 {
@@ -13,6 +14,8 @@ public class Wallrun : MonoBehaviour
     float minJumpHeight = 1.5f;
     [SerializeField]
     private float wallRunGravity;
+    [SerializeField]
+    private float wallGrav;
     public float WallJumpForce;
 
     bool wallLeft = false;
@@ -23,15 +26,29 @@ public class Wallrun : MonoBehaviour
     private PlayerInput inputActions;
     private InputAction jumpAction;
 
+    public bool IsWallRunning = false;
+
+    [SerializeField]
+    private bool runOnce = false;
+    private IEnumerator coroutine;
+
+    private Vector3 wallRunDir;
+    public Vector3 WallDir => wallRunDir;
 
     [SerializeField]
     private Rigidbody rb;
+    [SerializeField]
+    private Hydration hydration;
 
     private void Awake()
     {
         //Inputs
         inputActions = this.GetComponent<PlayerInput>();
         jumpAction = inputActions.actions["Jump"];
+        IsWallRunning = false;
+        runOnce = false;
+        wallGrav = wallRunGravity;
+        coroutine = Gravity(2.0f);
     }
 
     bool CanWallRun()
@@ -46,17 +63,17 @@ public class Wallrun : MonoBehaviour
     private void Update()
     {
         CheckWall();
-        if(CanWallRun())
+        if (CanWallRun() && !hydration.IsDehydrated && rb.linearVelocity.z != 0)
         {
             if(wallLeft)
             {
                 StartWallRun();
-                Debug.Log("On your left");
+                wallRunDir = new Vector3(-leftHit.normal.z, 0, leftHit.normal.x);
             }
             else if(wallRight)
             {
                 StartWallRun();
-                Debug.Log("On your right");
+                wallRunDir = new Vector3(rightHit.normal.z, 0, -rightHit.normal.x); ;
             }
             else
             {
@@ -73,9 +90,17 @@ public class Wallrun : MonoBehaviour
     {
         rb.useGravity = false;
 
-        rb.AddForce(Vector3.down * wallRunGravity, ForceMode.Force);
+        //if (!runOnce)
+        //{
+        //    runOnce = true;
+        //    StartCoroutine(coroutine);
+        //}
 
-        if(jumpAction.triggered)
+        rb.AddForce(Vector3.down * wallGrav, ForceMode.Force);
+
+        IsWallRunning = true;
+
+        if (jumpAction.triggered)
         {
             if(wallLeft)
             {
@@ -98,5 +123,14 @@ public class Wallrun : MonoBehaviour
     private void StopWallRun()
     {
         rb.useGravity = true;
+        IsWallRunning = false;
+        //StopCoroutine(coroutine);
+        //runOnce = false;
+    }
+    private IEnumerator Gravity(float time)
+    {
+        wallGrav = 0;
+        yield return new WaitForSeconds(time);
+        wallGrav = wallRunGravity;
     }
 }
