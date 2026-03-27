@@ -284,4 +284,13 @@ public class PlayerControl : MonoBehaviour
     {
         return IsCrouching;
     }
+    public float GetSpeed()
+    {
+        float speed = Mathf.Round(rb.linearVelocity.magnitude);
+        if(speed < 0)
+        {
+            speed = 0;
+        }
+        return speed;
+    }
 }

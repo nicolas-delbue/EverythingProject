@@ -128,4 +128,12 @@ public class Hydration : MonoBehaviour
             }
         }
     }
+    public float GetCurrentHydration()
+    {
+        return currentHydration;
+    }
+    public float GetCurrentContainer()
+    {
+        return currentContainerWater;
+    }
 }
