@@ -69,8 +69,8 @@ public class Hydration : MonoBehaviour
         CheckWallrun();
         CheckHydration();
 
-        Debug.Log("Current Hydration = "+ currentHydration);
-        Debug.Log("Current Container = "+ currentContainerWater);
+        //Debug.Log("Current Hydration = "+ currentHydration);
+        //Debug.Log("Current Container = "+ currentContainerWater);
 
         //Rehydration
         DrinkWaterFromContainer();

@@ -52,7 +52,7 @@ public class UIManager : MonoBehaviour
     }
     private void UpdateBB()
     {
-        BBImage.fillAmount = 0;//BBManage.Context.CurrentBB / 100;
+        BBImage.fillAmount = Temptation.Context.CurrentTemptation / 100;
     }
 
 }

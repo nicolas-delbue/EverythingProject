@@ -149,28 +149,25 @@ public class PlayerControl : MonoBehaviour
     }
     private void MovePlayer()
     {
-        //else if (isSprinting && IsCrouching)
-        //{
-        //    //Slide?
-        //}
+        //Change this later?
+        float movespeedDebuff = Temptation.Context.CurrentTemptation/100;
 
-        //Movespeed and move multiplier
         if (IsGrounded && !OnSlope())
         {
-            rb.AddForce(moveDirection.normalized * moveSpeed * GroundMovementMultiplier, ForceMode.Acceleration);
+            rb.AddForce(moveDirection.normalized * (moveSpeed - movespeedDebuff) * GroundMovementMultiplier, ForceMode.Acceleration);
         }
         else if(IsGrounded && OnSlope())
         {
-            rb.AddForce(SlopeMoveDir.normalized * moveSpeed * GroundMovementMultiplier, ForceMode.Acceleration);
+            rb.AddForce(SlopeMoveDir.normalized * (moveSpeed - movespeedDebuff) * GroundMovementMultiplier, ForceMode.Acceleration);
         }
         else if (!IsGrounded && Wallrun.Context.IsWallRunning)
         {
             
-            rb.AddForce(Wallrun.Context.WallDir.normalized * moveSpeed * AirMovementMultiplier, ForceMode.Acceleration);
+            rb.AddForce(Wallrun.Context.WallDir.normalized * (moveSpeed - movespeedDebuff) * AirMovementMultiplier, ForceMode.Acceleration);
         }
         else
         {
-            rb.AddForce(moveDirection.normalized * moveSpeed * AirMovementMultiplier, ForceMode.Acceleration);
+            rb.AddForce(moveDirection.normalized * (moveSpeed - movespeedDebuff) * AirMovementMultiplier, ForceMode.Acceleration);
         }
     }
     private void ControlDrag()
