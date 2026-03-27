@@ -78,10 +78,6 @@ public class PlayerControl : MonoBehaviour
     [SerializeField]
     private Rigidbody rb;
     [SerializeField]
-    private Hydration hydration;
-    [SerializeField]
-    private Wallrun wr;
-    [SerializeField]
     private GameObject playerCamera;
     [SerializeField]
     private Transform orientation;
@@ -96,10 +92,13 @@ public class PlayerControl : MonoBehaviour
     private InputAction crouchAction;
     private InputAction jumpAction;
     private InputAction sprintAction;
+
+    public static PlayerControl Context;
     
 
     private void Awake()
     {
+        Context = this;
         //Inputs
         inputActions = this.GetComponent<PlayerInput>();
         moveAction = inputActions.actions["Move"];
@@ -164,9 +163,10 @@ public class PlayerControl : MonoBehaviour
         {
             rb.AddForce(SlopeMoveDir.normalized * moveSpeed * GroundMovementMultiplier, ForceMode.Acceleration);
         }
-        else if (!IsGrounded && wr.IsWallRunning)
+        else if (!IsGrounded && Wallrun.Context.IsWallRunning)
         {
-            rb.AddForce(wr.WallDir.normalized * moveSpeed * AirMovementMultiplier, ForceMode.Acceleration);
+            
+            rb.AddForce(Wallrun.Context.WallDir.normalized * moveSpeed * AirMovementMultiplier, ForceMode.Acceleration);
         }
         else
         {
@@ -204,7 +204,7 @@ public class PlayerControl : MonoBehaviour
     private void SprintCheck()
     {
         isSprinting = sprintAction.inProgress;
-        if (isSprinting && IsGrounded && !hydration.IsDehydrated) //add !dehydrateed
+        if (isSprinting && IsGrounded && !Hydration.Context.IsDehydrated) //add !dehydrateed
         {
             moveSpeed = Mathf.Lerp(moveSpeed, SprintMoveSpeed, SpeedIncriment * Time.deltaTime);
             if(moveSpeed > 6.7f)
@@ -227,12 +227,12 @@ public class PlayerControl : MonoBehaviour
     private void Jump()
     {
         hasJumped = jumpAction.triggered;
-        if (IsGrounded && hasJumped && hydration.IsDehydrated)
+        if (IsGrounded && hasJumped && Hydration.Context.IsDehydrated)
         {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x,0,rb.linearVelocity.z);
             rb.AddForce(Vector3.up * JumpStrength/2, ForceMode.Impulse);
         }
-        else if(IsGrounded && hasJumped && !hydration.IsDehydrated)
+        else if(IsGrounded && hasJumped && !Hydration.Context.IsDehydrated)
         {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
             rb.AddForce(Vector3.up * JumpStrength, ForceMode.Impulse);

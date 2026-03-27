@@ -24,15 +24,17 @@ public class Hydration : MonoBehaviour
     public float CurrentContainerWater => currentContainerWater;
 
 
-    [SerializeField]
-    private PlayerControl pc;
     private PlayerInput inputActions;
     private InputAction jumpAction;
     private InputAction sprintAction;
     private InputAction drinkAction;
 
+    public static Hydration Context;
+
     private void Awake()
     {
+        Context = this;
+
         inputActions = this.GetComponent<PlayerInput>();
         jumpAction = inputActions.actions["Jump"];
         sprintAction = inputActions.actions["Sprint"];
@@ -75,7 +77,7 @@ public class Hydration : MonoBehaviour
     }
     private void CheckJump()
     {
-        if (jumpAction.triggered && pc._IsGrounded)
+        if (jumpAction.triggered && PlayerControl.Context._IsGrounded)
         {
             currentHydration -= DecreaseIncriment*JumpModifier;
         }
@@ -89,7 +91,7 @@ public class Hydration : MonoBehaviour
     }
     private void CheckWallrun()
     {
-        if(wallrun.IsWallRunning)
+        if(Wallrun.Context.IsWallRunning)
         {
             currentHydration -= DecreaseIncriment*WallrunModifier*Time.deltaTime;
         }

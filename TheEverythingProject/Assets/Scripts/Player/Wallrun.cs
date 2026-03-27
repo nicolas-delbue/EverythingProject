@@ -37,11 +37,13 @@ public class Wallrun : MonoBehaviour
 
     [SerializeField]
     private Rigidbody rb;
-    [SerializeField]
-    private Hydration hydration;
+
+    public static Wallrun Context;
 
     private void Awake()
     {
+        Context = this;
+
         //Inputs
         inputActions = this.GetComponent<PlayerInput>();
         jumpAction = inputActions.actions["Jump"];
@@ -63,7 +65,7 @@ public class Wallrun : MonoBehaviour
     private void Update()
     {
         CheckWall();
-        if (CanWallRun() && !hydration.IsDehydrated && rb.linearVelocity.z != 0)
+        if (CanWallRun() && !Hydration.Context.IsDehydrated && rb.linearVelocity.z != 0)
         {
             if(wallLeft)
             {
